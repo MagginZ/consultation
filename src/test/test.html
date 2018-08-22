@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=0.5, maximum-scale=2.0, user-scalable=yes" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <style>
+        *{
+            margin:0;
+            padding:0;
+        }
+        .article{
+            width:60%;
+            margin: auto;
+        }
+        .article-list-box{
+            padding:10px;
+            display: flex;
+            justify-content: space-between;
+            color:#666;
+            margin:10px;
+        }
+        .thumbnail{
+            padding: 5px 40px;
+
+        }
+        .thumbnail img{
+            height: 167px;
+            width: 270px;
+            border-radius: 5px;
+        }
+        .article-content-box{
+            width: 100%;
+            padding-top: 0;
+            position: relative;
+        }
+        .article-list-box h2{
+            max-height: 60px;
+            overflow: hidden;
+            padding-bottom: 18px;
+        }
+        .article-list-box h2 a{
+            color: #000;
+            text-decoration: none;
+        }
+        .article-info{
+            position: absolute;
+            bottom: 8px;
+           
+        }
+        .article-abstract{
+            font-size:14px;
+            max-height: 100px;
+            overflow: hidden;
+        }
+        .article-info .author{
+           width:100%;
+           font-size: 14px;
+        }
+        @media only screen and (max-width: 1200px) {
+            .article{
+                width: 90%;
+            }
+        }
+        @media only screen and (max-width: 862px) {
+            .article{
+                width: 95%;
+            }
+            .thumbnail{
+                /* display: none; */
+            }
+            .article-list-box h2{
+                font-size: 16px;
+                max-height: 60px;
+                overflow: hidden;
+                padding-bottom: 18px;
+            }
+            .article-content-box{
+                position: static;
+            }
+            .article-info{
+                position: static;
+                bottom: 0;
+                margin-top: 10px;
+            }
+        }
+        .change{
+            width: 60%;
+            margin:20px auto;
+        }
+        .change #changeBtn{
+            width: 100%;
+            height: 50px;
+        }
+        .error-page{
+            text-align: center;
+            display: flex;
+            justify-content: space-between;
+            margin: 20% auto;
+            width: 566px;
+        }
+        .error-desc{
+            font-size: 32px;
+            font-weight: bold;
+            color: #ef6364;
+            margin: 20% 0;
+            text-align: left;
+        }
+       .error-desc span{
+           font-size: 16px;
+           color: #666;
+       }
+       .error-desc span.retry, .article span.new{
+           text-decoration: underline;
+           cursor: pointer;
+       }
+       .error-desc span a, .article span.new a{
+           color: #feb417;
+       }
+       .article span.new{
+           text-align: center;
+           text-decoration: none;
+           margin:40px 7%;
+           display:block;
+           background: #666;
+           padding: 10px;
+           color: #fff;
+       }
+       @media only screen and (max-width: 766px) {
+        .error-page{
+            display: block;
+            margin-top: 80%;
+        }
+        .error-desc{
+            margin-top:2%;
+            text-align: center;
+        }
+       }
+    </style>
+</head>
+<body>
+    <div class="article">
+        <div class="article-list">
+            <img src="./static/loading.gif" alt="加载中...." width="100%">
+        </div>
+    </div>
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+    <script src="./static/md5.min.js"></script>
+    <script>
+        getData()
+        var lid = ""
+        function getData (lastId) {
+            var date = new Date().getTime().toString().substring(0, 10) // 获取当前时间秒级时间戳
+            var accessKey = 'your accessKey' // 金色财经接口提供的sccesskey  http://www.coindog.com/docs/
+            var secretKey = 'your secretKey' // 金色财经提供
+            if (lastId) {
+                var url = "access_key=" + accessKey + "&date=" + date + "&last_id=" + lastId + "&secret_key=" + secretKey
+            }else { 
+                var url = "access_key=" + accessKey + "&date=" + date + "&secret_key=" + secretKey  // 按照这个顺序排列进行md5加密，需要添加lastId则按照上面的顺序
+            }
+            var sign = md5(url)
+            $.ajax({
+                type:"get",
+                url: "http://api.coindog.com/topic/list?" + url + "&sign=" + sign, // ajax请求金色财经提供接口，需要携带以上拼接的参数和加密后的sign参数
+                success: function (data) {
+                    var html =""
+                    var lidArray = []
+                    $.each(data, function(idx, obj) {
+                        html+= `
+                        <div class="article-list-box">
+                            <div class="thumbnail"><a href="${obj.url}" target="_blank" title="${obj.title}"><img src="${obj.thumbnail}"/></a></div>
+                            <div class="article-content-box">
+                                <h2 class="article-title"><a href="${obj.url}"  target="_blank">${obj.title}</a></h2>
+                                <p class="article-abstract">${obj.summary}</p>
+                                <div class="article-info">
+                                    <p class="author">${obj.resource}.${obj.published_at}</p>
+                                </div>
+                            </div>
+                        </div>
+                        `
+                        lidArray.push(obj.id)
+                    })
+                    $('.article-list').html(html)
+                    lid = lidArray[0]
+                },
+                error: function(err){
+                    var html=""
+                    html += `
+                    <div class="error-page">
+                        <img src="./static/error.gif" alt="请求异常" alt="">
+                        <p class="error-desc">阿哦..请求异常... <br>
+                        <span class="retry">点击重试</span> <br>
+                    <span>最新资讯、更多内容打开<a href="https://www.jinse.com/">金色财经</a></span></p>
+                    </div>
+                    `
+                    $('.article-list').html(html)
+                     $(".retry").click(function() {
+                         $('.article-list').html(`<img src="./static/loading.gif" alt="加载中...." width="100%">`)
+                        getData()
+                    })
+                }
+            })
+        }
+       
+    </script>
+</body>
+</html>
