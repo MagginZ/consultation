@@ -1,7 +1,7 @@
 # consultation
 
 #### Description
-新闻咨询网页
+新闻咨询网页-手机电脑皆适配
 
 #### Software Architecture
 
